@@ -1,0 +1,25 @@
+name: Snyk Container example
+
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    name: Test and build
+    environment: snyk-npm
+    runs-on: ubuntu-latest
+steps:
+  - name: Setup Snyk + snyk-to-html
+    run: |
+      npm install snyk -g
+      npm install snyk-to-html -g
+      snyk auth ${{secrets.SNYK_AUTH}}
+  - name: Snyk Container
+    run: |
+    docker build . -t slim:latest
+    snyk container monitor slim:latest --file=Dockerfile | snyk-to-html -o results_container.html || true
+  - name: Archive Snyk Coverage Results
+    uses: actions/upload-artifact@v2
+    with:
+        name: Archive Snyk Results
+        path:
+          results_container.html
